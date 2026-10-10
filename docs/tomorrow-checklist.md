@@ -32,7 +32,7 @@
 - [x] stage 无需服务器交互 2FA，得到真实 UUID；已核对 `stage-view.json`，另存本次 artifact 和原始 integrity。
 - [x] 精确测试版本在批准前尚未公开。初始 stage 状态为 `validating`，本轮即时查询尚未观察到公开占位，不能声称它已经出现。
 - [ ] 若失败或断线，先查原 UUID/待批准列表与证据，不盲目重跑。
-- [ ] 可信终端 `npm stage download UUID`，检查 metadata、内容，并与原 manifest 的 integrity 比对。
+- [x] 可信终端 `npm stage download UUID`，检查 metadata、内容，并与原 manifest 的 integrity 比对：下载包与服务器 artifact 逐字节相同。
 - [ ] 核对无误后 `npm stage approve UUID` 并完成 2FA；不要附加 `--dry-run`。
 - [ ] 手动运行 `verify`，沿用包名/版本；`expected_integrity` 复制原 stage 的完整 `sha512-…`。
 - [ ] 查看 `verification.json`：实际安装成功，package.json/probe.txt、integrity 和 `next` 均一致。

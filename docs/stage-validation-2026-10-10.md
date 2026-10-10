@@ -39,10 +39,15 @@ shasum:    77fbb82d81dde733c270db12a11da7bf3c5363f2
 - 精确版本 `0.0.1` 仍返回 `404 "version not found"`，即**批准前真实版本未公开**，符合预期。
 - 上传时即时查询尚未观察到占位，占位是在随后出现的；`next` dist-tag 在批准前尚不存在。
 
+## 独立下载比对（同日已完成）
+
+北京时间约 15:47，本机完成 npm 浏览器登录（`whoami` 为 `airport233`），随后：
+
+- `npm stage list`／`npm stage view` 显示该 stage 状态已由 `validating` 变为 `staged`，`staged by: airport233 (user)`，`access: public`，shasum 与服务器记录一致。
+- `npm stage download` 取回的 tarball 为 306 字节，**与服务器 artifact 逐字节相同**；本机重算的 sha512 等于上面的 integrity，sha1 等于 shasum。
+- 解包核对：`probe.txt` 内容为 `self-hosted staging probe`，`package.json` 名称、版本与预期一致，无依赖、无安装脚本。
+
 ## 尚未完成
 
-本次只验证了“自有服务器用 stage-only token 上传待审核版本”这一半。以下仍待执行，不能据此宣称发布链路全部通过：
-
-1. 可信终端 `npm stage download 048c5e58-0d8d-4b61-a842-6c9ac1dd01e3`，独立下载待审核 tarball 并与上面的 integrity 比对（需要本机完成 npm 浏览器登录）。
-2. 核对无误后由账号持有人 `npm stage approve` 并完成 security key 2FA。
-3. 运行 `mode=verify`，填入 `0.0.1` 和上面的 integrity，确认干净环境可安装、内容与摘要一致、`next` 指向 `0.0.1`。
+1. 由账号持有人 `npm stage approve 048c5e58-0d8d-4b61-a842-6c9ac1dd01e3` 并完成 security key 2FA。
+2. 运行 `mode=verify`，填入 `0.0.1` 和上面的 integrity，确认干净环境可安装、内容与摘要一致、`next` 指向 `0.0.1`。

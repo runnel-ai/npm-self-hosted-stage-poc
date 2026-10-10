@@ -1,0 +1,17 @@
+{
+  "name": "npm-self-hosted-stage-poc-harness",
+  "version": "0.0.0",
+  "private": true,
+  "description": "Dependency-free self-hosted npm staged publishing probe",
+  "license": "UNLICENSED",
+  "type": "module",
+  "engines": {
+    "node": ">=24"
+  },
+  "scripts": {
+    "test": "node --test",
+    "pack:probe": "node scripts/probe.mjs pack",
+    "stage:probe": "node scripts/probe.mjs stage",
+    "verify:probe": "node scripts/probe.mjs verify"
+  }
+}

@@ -1,0 +1,53 @@
+# 现场检查表
+
+当前只完成本地准备；以下方框用于记录目标服务器上的真实结果，尚未勾选即未验证。
+
+## 先确认执行对象
+
+- [ ] 说清“群组”属于 GitHub organization、team、runner group 还是 npm organization。
+- [ ] 确认独立测试仓库所在组织、操作人权限及仓库对目标 runner group 的访问权。
+- [ ] runner 为 Linux，Docker 可用，labels 与 `POC_RUNNER_LABELS` 匹配。
+- [ ] 确认发布 runner 的访问范围和隔离方式；容器会挂载 workspace。
+- [ ] 网络可访问 GitHub Actions、Node 镜像仓库及 `registry.npmjs.org`；预留首次拉镜像时间。
+- [ ] 确认获准的 npm 测试 scope、独立包名 `@scope/ocr-stage-poc-xxx`、未占用的 `0.0.N` 版本和批准人。
+- [ ] 批准人的 npm 发布权限、2FA 和可信终端可用；运行 `npm stage --help` 确认命令可用。
+- [ ] 记录包级 Publishing access；测试 token 为 stage-only、无 bypass、限测试包/scope、短有效期。
+- [ ] 若新包无法加入 token 范围，先确定初始化方案；初始化也会写 registry，另留服务器测试版本。
+
+## 配置并先跑 pack
+
+- [ ] workflow 已在获准测试仓库默认分支；仅手动触发。
+- [ ] 配置 `POC_RUNNER_GROUP`、`POC_RUNNER_LABELS`、`POC_PACKAGE_NAME`；未配 group 会 skipped。
+- [ ] 默认镜像为 `node:24.21.0-bookworm-slim`；首次拉取后记录实际镜像 digest 和 Node/npm 版本。
+- [ ] 以默认模式 `pack` 运行，记录 Node/npm 版本；不需要 npm token。
+- [ ] 下载 artifact，检查 `manifest.json`、`package.tgz`，确认包内只有 `package.json`、`probe.txt`。
+- [ ] 本次只完成封装，尚不能据此判定认证或发布可用。
+
+## stage → 人工批准 → verify
+
+- [ ] 配置 secret `NPM_STAGE_TOKEN`，确认它只注入 stage 步骤。
+- [ ] 运行 `stage` 前再次核对包名、版本和目标 `next`；这是一次真实 npm 写入。
+- [ ] stage 无需服务器交互 2FA，得到真实 UUID；核对 `stage-view.json`，保存本次 artifact 和原始 integrity。
+- [ ] 精确测试版本在批准前尚未公开；新包出现 `0.0.0-stage` 占位正常。
+- [ ] 若失败或断线，先查原 UUID/待批准列表与证据，不盲目重跑。
+- [ ] 可信终端 `npm stage download UUID`，检查 metadata、内容，并与原 manifest 的 integrity 比对。
+- [ ] 核对无误后 `npm stage approve UUID` 并完成 2FA；不要附加 `--dry-run`。
+- [ ] 手动运行 `verify`，沿用包名/版本；`expected_integrity` 复制原 stage 的完整 `sha512-…`。
+- [ ] 查看 `verification.json`：实际安装成功，package.json/probe.txt、integrity 和 `next` 均一致。
+
+## 收尾与记录
+
+- [ ] 保存 workflow run 地址、服务器/runner、镜像、Node/npm 版本和包级权限设置；artifact 7 天内另存。
+- [ ] 保存包名、版本、stage UUID、原始 integrity、批准前后状态与批准人；不记录 token。
+- [ ] 撤销测试 token，处理不再使用的待批准记录；不自动删除公开版本。
+- [ ] 结论只覆盖本次服务器、工具和权限组合；七包、断线恢复、GitHub Release 留待下一轮。
+
+| 记录项 | 现场填写 |
+| --- | --- |
+| GitHub 仓库 / workflow run | |
+| runner group / labels / 镜像 | |
+| Node / npm | |
+| 测试包 / 版本 / Publishing access | |
+| stage UUID / integrity | |
+| 批准人 / 批准时间 | |
+| verify 结果 / 剩余问题 | |

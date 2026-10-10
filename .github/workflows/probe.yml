@@ -1,0 +1,82 @@
+name: Self-hosted npm staging probe
+
+on:
+  workflow_dispatch:
+    inputs:
+      mode:
+        description: 'pack is local only; stage writes to npm; verify runs after human approval'
+        type: choice
+        options:
+          - pack
+          - stage
+          - verify
+        default: pack
+        required: true
+      version:
+        description: 'Unique test version (0.0.1, 0.0.2, ...); use the staged version for verify'
+        type: string
+        default: '0.0.1'
+        required: true
+      expected_integrity:
+        description: 'verify only: sha512-... copied from the original stage manifest'
+        type: string
+        required: false
+
+permissions:
+  contents: read
+
+concurrency:
+  group: npm-stage-poc-${{ vars.POC_PACKAGE_NAME || github.repository }}
+  cancel-in-progress: false
+
+jobs:
+  probe:
+    if: ${{ vars.POC_RUNNER_GROUP != '' }}
+    runs-on:
+      group: ${{ vars.POC_RUNNER_GROUP }}
+      labels: ${{ fromJSON(vars.POC_RUNNER_LABELS || '["self-hosted","linux","x64"]') }}
+    timeout-minutes: 10
+    container:
+      image: ${{ vars.POC_NODE_IMAGE || 'node:24.21.0-bookworm-slim' }}
+      options: --cpus=1 --memory=512m
+    defaults:
+      run:
+        shell: sh
+    env:
+      POC_PACKAGE_NAME: ${{ vars.POC_PACKAGE_NAME || '@example/ocr-stage-poc-example' }}
+      POC_VERSION: ${{ inputs.version }}
+      POC_NODE_IMAGE: ${{ vars.POC_NODE_IMAGE || 'node:24.21.0-bookworm-slim' }}
+    steps:
+      - name: Check out the small probe repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Check local contracts without installing dependencies
+        run: node --test
+
+      - name: Prepare the two-file tarball without credentials
+        if: ${{ inputs.mode != 'verify' }}
+        run: node scripts/probe.mjs pack
+
+      - name: Upload for human review and check pre-approval visibility
+        if: ${{ inputs.mode == 'stage' }}
+        env:
+          NPM_STAGE_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
+        run: node scripts/probe.mjs stage
+
+      - name: Verify the approved version from a clean consumer directory
+        if: ${{ inputs.mode == 'verify' }}
+        env:
+          POC_EXPECTED_INTEGRITY: ${{ inputs.expected_integrity }}
+        run: node scripts/probe.mjs verify
+
+      - name: Save the tarball and non-secret evidence
+        if: ${{ always() }}
+        uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+        with:
+          name: npm-stage-poc-${{ github.run_id }}-${{ github.run_attempt }}
+          path: out/
+          if-no-files-found: warn
+          retention-days: 7
+          compression-level: 0

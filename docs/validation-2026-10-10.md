@@ -37,4 +37,12 @@ sha512-f+dSTMfkUODYcqBoRcnIIaibc6pdtqxeq5CdVGdu/4Bxr5naXyKFvlk4Nb3zIwAkJUh0GZBmS
 
 实际运行还显示：runner 自动向容器挂载了宿主机 Docker socket，虽 workflow 没有声明这个挂载，也不能据此宣称容器完全隔离宿主机。两项 action 声明的 Node20 被当前 runner 自动改用 Node24，产生弃用提示，本次未影响运行结果。
 
-后续需要准备 npm 测试账号与 2FA、独立包名、stage-only token，再执行 `stage → 人工批准 → verify`。下一轮审查必须使用真实 stage 那次生成的 artifact，不能使用本次示例包的摘要。
+后续执行 `stage → 人工批准 → verify`。下一轮审查必须使用真实 stage 那次生成的 artifact，不能使用本次示例包的摘要。
+
+## npm 账号准备进度
+
+同日，用户确认 npm 账号为 `airport233`，账户页面显示 `Enabled for authorization and publishing` 和 `1 security key`，并确认没有发布过包。token 创建页面可选择个人 scope `@airport233`。这些账号状态来自用户的页面反馈，不是实际 npm 上传结果。
+
+已配置并通过 GitHub API 读取确认新测试仓库的 `POC_PACKAGE_NAME=@airport233/ocr-stage-poc-test`。计划创建限 `@airport233`、无 bypass 2FA、短有效期的 stage-only token，由用户直接存入仓库的 `NPM_STAGE_TOKEN` secret；当前 secret 尚未配置。该 token 为 scope 级授权，验证结束后撤销。
+
+首次真实 stage 计划使用 `0.0.1`，执行前检查版本状态。npm 已明确支持 stage-only token 创建新 public scoped 包，因此本次无须先在本机发布初始化版本；首次 stage 的 `0.0.0-stage` 占位仍属于真实公开写入。当前尚未登录 npm CLI、创建包或上传候选版本。

@@ -10,6 +10,8 @@
 - [x] 确认发布 runner 的访问范围和隔离方式；实际容器挂载了 workspace 和 Docker socket，不能当作完整安全隔离。
 - [ ] 网络可访问 GitHub Actions、Node 镜像仓库及 `registry.npmjs.org`；预留首次拉镜像时间。
 - [ ] 确认获准的 npm 测试 scope、独立包名 `@scope/ocr-stage-poc-xxx`、未占用的 `0.0.N` 版本和批准人。
+- [x] 用户确认 npm 账号 `airport233` 已启用 authorization and publishing 2FA，配置了 1 个 security key，且没有发布过包。
+- [x] token 选择器可见个人 scope `@airport233`；测试包已配置为 `@airport233/ocr-stage-poc-test`，计划首次 stage 使用 `0.0.1`，执行前再次查版本。
 - [ ] 批准人的 npm 发布权限、2FA 和可信终端可用；运行 `npm stage --help` 确认命令可用。
 - [ ] 记录包级 Publishing access；测试 token 为 stage-only、无 bypass、限测试包/scope、短有效期。
 - [ ] 若新包无法加入 token 范围，先确定初始化方案；初始化也会写 registry，另留服务器测试版本。
@@ -17,7 +19,7 @@
 ## 配置并先跑 pack
 
 - [x] workflow 已在获准测试仓库默认分支；仅手动触发。
-- [ ] 配置 `POC_RUNNER_GROUP`、`POC_RUNNER_LABELS`、`POC_PACKAGE_NAME`；未配 group 会 skipped。
+- [x] 配置并读取确认 `POC_RUNNER_GROUP=build-and-release`、`POC_RUNNER_LABELS=["self-hosted","Linux","X64","build"]`、`POC_PACKAGE_NAME=@airport233/ocr-stage-poc-test`。
 - [x] 默认镜像为 `node:24.21.0-bookworm-slim`；首次拉取后记录实际镜像 digest 和 Node/npm 版本。
 - [x] 以默认模式 `pack` 运行，记录 Node/npm 版本；不需要 npm token。
 - [x] 下载 artifact，检查 `manifest.json`、`package.tgz`，确认包内只有 `package.json`、`probe.txt`。

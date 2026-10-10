@@ -1,13 +1,13 @@
 # 现场检查表
 
-当前只完成本地准备；以下方框用于记录目标服务器上的真实结果，尚未勾选即未验证。
+首次 self-hosted 容器 `pack` 已通过，见[运行记录](validation-2026-10-10.md)。以下方框记录当前进度；真实 npm 上传、批准及安装验证仍待执行。
 
 ## 先确认执行对象
 
-- [ ] 说清“群组”属于 GitHub organization、team、runner group 还是 npm organization。
-- [ ] 确认独立测试仓库所在组织、操作人权限及仓库对目标 runner group 的访问权。
-- [ ] runner 为 Linux，Docker 可用，labels 与 `POC_RUNNER_LABELS` 匹配。
-- [ ] 确认发布 runner 的访问范围和隔离方式；容器会挂载 workspace。
+- [x] 说清“群组”属于 GitHub organization、team、runner group 还是 npm organization。
+- [x] 确认独立测试仓库所在组织、操作人权限及仓库对目标 runner group 的访问权。
+- [x] runner 为 Linux，Docker 可用，labels 与 `POC_RUNNER_LABELS` 匹配。
+- [x] 确认发布 runner 的访问范围和隔离方式；实际容器挂载了 workspace 和 Docker socket，不能当作完整安全隔离。
 - [ ] 网络可访问 GitHub Actions、Node 镜像仓库及 `registry.npmjs.org`；预留首次拉镜像时间。
 - [ ] 确认获准的 npm 测试 scope、独立包名 `@scope/ocr-stage-poc-xxx`、未占用的 `0.0.N` 版本和批准人。
 - [ ] 批准人的 npm 发布权限、2FA 和可信终端可用；运行 `npm stage --help` 确认命令可用。
@@ -16,12 +16,12 @@
 
 ## 配置并先跑 pack
 
-- [ ] workflow 已在获准测试仓库默认分支；仅手动触发。
+- [x] workflow 已在获准测试仓库默认分支；仅手动触发。
 - [ ] 配置 `POC_RUNNER_GROUP`、`POC_RUNNER_LABELS`、`POC_PACKAGE_NAME`；未配 group 会 skipped。
-- [ ] 默认镜像为 `node:24.21.0-bookworm-slim`；首次拉取后记录实际镜像 digest 和 Node/npm 版本。
-- [ ] 以默认模式 `pack` 运行，记录 Node/npm 版本；不需要 npm token。
-- [ ] 下载 artifact，检查 `manifest.json`、`package.tgz`，确认包内只有 `package.json`、`probe.txt`。
-- [ ] 本次只完成封装，尚不能据此判定认证或发布可用。
+- [x] 默认镜像为 `node:24.21.0-bookworm-slim`；首次拉取后记录实际镜像 digest 和 Node/npm 版本。
+- [x] 以默认模式 `pack` 运行，记录 Node/npm 版本；不需要 npm token。
+- [x] 下载 artifact，检查 `manifest.json`、`package.tgz`，确认包内只有 `package.json`、`probe.txt`。
+- [x] 本次只完成封装，尚不能据此判定认证或发布可用。
 
 ## stage → 人工批准 → verify
 

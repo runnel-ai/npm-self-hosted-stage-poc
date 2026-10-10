@@ -2,7 +2,7 @@
 
 用自有 Linux 服务器的 GitHub Actions runner，在 Node 容器中上传一个无依赖的测试包；维护者在可信终端通过 2FA 批准，再验证公开安装。目标是确认这组服务器、npm 账号和权限配置下的发布链路可用。
 
-组织仓库为私有的 [runnel-ai/npm-self-hosted-stage-poc](https://github.com/runnel-ai/npm-self-hosted-stage-poc)。当前已完成本地检查，runner 和 npm 测试凭据尚未配置；本机没有 Docker，**尚未运行 job 容器或目标服务器，也没有真实 stage、批准或 npm 发布结果**。执行顺序见 [现场检查表](docs/tomorrow-checklist.md)。
+组织仓库为私有的 [runnel-ai/npm-self-hosted-stage-poc](https://github.com/runnel-ai/npm-self-hosted-stage-poc)。2026-10-10 已在 `linux-runner-01` 的 Node 容器中完成首次 `pack`：5 项测试通过，实际 tarball 的两个文件和摘要均已核对，详见[运行记录](docs/validation-2026-10-10.md)。**npm 测试账号、包及凭据尚待准备，stage、人工批准和公开安装验证尚未执行。** 后续顺序见[现场检查表](docs/tomorrow-checklist.md)。
 
 ## 实现范围
 

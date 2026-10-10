@@ -2,7 +2,7 @@
 
 用自有 Linux 服务器的 GitHub Actions runner，在 Node 容器中上传一个无依赖的测试包；维护者在可信终端通过 2FA 批准，再验证公开安装。目标是确认这组服务器、npm 账号和权限配置下的发布链路可用。
 
-组织仓库为私有的 [runnel-ai/npm-self-hosted-stage-poc](https://github.com/runnel-ai/npm-self-hosted-stage-poc)。2026-10-10 已在 `linux-runner-01` 的 Node 容器中完成首次 `pack`：5 项测试通过，实际 tarball 的两个文件和摘要均已核对，详见[运行记录](docs/validation-2026-10-10.md)。用户已确认 npm 账号 `airport233` 启用了发布 2FA，且没有发布过包；测试包名已配置为 `@airport233/ocr-stage-poc-test`。**stage-only 凭据尚待配置，stage、人工批准和公开安装验证尚未执行。** 后续顺序见[现场检查表](docs/tomorrow-checklist.md)。
+组织仓库为私有的 [runnel-ai/npm-self-hosted-stage-poc](https://github.com/runnel-ai/npm-self-hosted-stage-poc)。2026-10-10 已在 `linux-runner-01` 的 Node 容器中完成首次 [pack](docs/validation-2026-10-10.md) 和真实 [stage 上传](docs/stage-validation-2026-10-10.md)：测试包为 `@airport233/ocr-stage-poc-test@0.0.1`，5 项测试通过，306 字节的 tarball 仅含两个文件、零依赖，批准前的精确版本未公开。用户已确认 npm 账号 `airport233` 启用了发布 2FA。**从 npm 独立下载比对、人工批准和公开安装验证尚未完成，不能据此宣称发布链路全部通过。** 后续顺序见[现场检查表](docs/tomorrow-checklist.md)。
 
 ## 实现范围
 
@@ -33,7 +33,7 @@
 
 若新包尚未存在、token 页面无法选择它，先确认初始化方式：可由维护者在可信终端 stage 一个初始化版本，再为该测试包签发 token，服务器改用另一个未占用版本。初始化同样是真实 npm 写入，不要借用生产包或扩大到生产 scope。
 
-本次用户已在 token 页面找到个人 scope `@airport233`，并确认账号没有发布过包，因此计划使用限该 scope 的短期 stage-only token，首次直接从服务器 stage `@airport233/ocr-stage-poc-test@0.0.1`。这是 scope 级授权，会覆盖该 scope 下未来新增的包；验证完成后撤销。npm [2026-10-02 公告](https://github.blog/changelog/2026-10-02-npm-staged-publishing-now-supports-creating-new-packages/)明确支持使用 stage-only token 创建新的 public scoped 包，无须先手工发布。实际账号和权限组合仍待本轮验证。
+本次用户在 token 页面找到个人 scope `@airport233`，并确认账号此前没有发布过包；按限该 scope、短期有效、stage-only、无 bypass 的指引创建并保存了 `NPM_STAGE_TOKEN`。服务器已使用该凭据首次 stage `@airport233/ocr-stage-poc-test@0.0.1`；仅核对了 Secret 元数据和上传结果，没有读取 token 值或独立审计其权限。scope 级授权会覆盖该 scope 下未来新增的包，验证完成后撤销。npm [2026-10-02 公告](https://github.blog/changelog/2026-10-02-npm-staged-publishing-now-supports-creating-new-packages/)明确支持此方式创建新的 public scoped 包，无须先手工发布。
 
 ## 执行流程
 

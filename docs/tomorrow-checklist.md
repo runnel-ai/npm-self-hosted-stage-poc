@@ -1,6 +1,6 @@
 # 现场检查表
 
-首次 self-hosted 容器 `pack` 已通过，见[运行记录](validation-2026-10-10.md)。以下方框记录当前进度；真实 npm 上传、批准及安装验证仍待执行。
+首次 self-hosted 容器 [pack](validation-2026-10-10.md) 和真实 [stage 上传](stage-validation-2026-10-10.md) 已通过。以下方框记录当前进度；npm 待审核 tarball 的独立下载比对、人工批准及安装验证仍待完成。
 
 ## 先确认执行对象
 
@@ -8,13 +8,13 @@
 - [x] 确认独立测试仓库所在组织、操作人权限及仓库对目标 runner group 的访问权。
 - [x] runner 为 Linux，Docker 可用，labels 与 `POC_RUNNER_LABELS` 匹配。
 - [x] 确认发布 runner 的访问范围和隔离方式；实际容器挂载了 workspace 和 Docker socket，不能当作完整安全隔离。
-- [ ] 网络可访问 GitHub Actions、Node 镜像仓库及 `registry.npmjs.org`；预留首次拉镜像时间。
-- [ ] 确认获准的 npm 测试 scope、独立包名 `@scope/ocr-stage-poc-xxx`、未占用的 `0.0.N` 版本和批准人。
+- [x] 网络可访问 GitHub Actions、Node 镜像仓库及 `registry.npmjs.org`；首次 stage 已复用 Node 镜像缓存。
+- [x] 测试 scope 为 `@airport233`，包为 `@airport233/ocr-stage-poc-test@0.0.1`，stage 前确认版本未公开，批准人为该账号持有人。
 - [x] 用户确认 npm 账号 `airport233` 已启用 authorization and publishing 2FA，配置了 1 个 security key，且没有发布过包。
 - [x] token 选择器可见个人 scope `@airport233`；测试包已配置为 `@airport233/ocr-stage-poc-test`，计划首次 stage 使用 `0.0.1`，执行前再次查版本。
 - [ ] 批准人的 npm 发布权限、2FA 和可信终端可用；运行 `npm stage --help` 确认命令可用。
 - [ ] 记录包级 Publishing access；测试 token 为 stage-only、无 bypass、限测试包/scope、短有效期。
-- [ ] 若新包无法加入 token 范围，先确定初始化方案；初始化也会写 registry，另留服务器测试版本。
+- [x] 新包通过个人测试 scope 授权直接首次 stage，无须在本机另发初始化版本。
 
 ## 配置并先跑 pack
 
@@ -27,10 +27,10 @@
 
 ## stage → 人工批准 → verify
 
-- [ ] 配置 secret `NPM_STAGE_TOKEN`，确认它只注入 stage 步骤。
-- [ ] 运行 `stage` 前再次核对包名、版本和目标 `next`；这是一次真实 npm 写入。
-- [ ] stage 无需服务器交互 2FA，得到真实 UUID；核对 `stage-view.json`，保存本次 artifact 和原始 integrity。
-- [ ] 精确测试版本在批准前尚未公开；新包出现 `0.0.0-stage` 占位正常。
+- [x] 配置 secret `NPM_STAGE_TOKEN`，确认它只注入 stage 步骤；只读取 Secret 元数据，不读取其值。
+- [x] 运行 `stage` 前核对包名、版本和目标 `next`；已完成真实 npm 上传。
+- [x] stage 无需服务器交互 2FA，得到真实 UUID；已核对 `stage-view.json`，另存本次 artifact 和原始 integrity。
+- [x] 精确测试版本在批准前尚未公开。初始 stage 状态为 `validating`，本轮即时查询尚未观察到公开占位，不能声称它已经出现。
 - [ ] 若失败或断线，先查原 UUID/待批准列表与证据，不盲目重跑。
 - [ ] 可信终端 `npm stage download UUID`，检查 metadata、内容，并与原 manifest 的 integrity 比对。
 - [ ] 核对无误后 `npm stage approve UUID` 并完成 2FA；不要附加 `--dry-run`。

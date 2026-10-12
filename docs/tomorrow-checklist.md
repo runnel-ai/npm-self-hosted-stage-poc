@@ -1,6 +1,6 @@
 # 现场检查表
 
-首次 self-hosted 容器 [pack](validation-2026-10-10.md) 和真实 [stage 上传](stage-validation-2026-10-10.md) 已通过。以下方框记录当前进度；npm 待审核 tarball 的独立下载比对、人工批准及安装验证仍待完成。
+全部步骤已完成：[pack](validation-2026-10-10.md) → [stage 上传](stage-validation-2026-10-10.md) → 人工 2FA 批准 → [公开安装验收](verify-validation-2026-10-12.md)。结论：这组服务器、账号与权限配置下的 staged publishing 链路成立。
 
 ## 先确认执行对象
 
@@ -33,23 +33,23 @@
 - [x] 精确测试版本在批准前尚未公开。初始 stage 状态为 `validating`，本轮即时查询尚未观察到公开占位，不能声称它已经出现。
 - [ ] 若失败或断线，先查原 UUID/待批准列表与证据，不盲目重跑。
 - [x] 可信终端 `npm stage download UUID`，检查 metadata、内容，并与原 manifest 的 integrity 比对：下载包与服务器 artifact 逐字节相同。
-- [ ] 核对无误后 `npm stage approve UUID` 并完成 2FA；不要附加 `--dry-run`。
-- [ ] 手动运行 `verify`，沿用包名/版本；`expected_integrity` 复制原 stage 的完整 `sha512-…`。
-- [ ] 查看 `verification.json`：实际安装成功，package.json/probe.txt、integrity 和 `next` 均一致。
+- [x] 核对无误后 `npm stage approve UUID` 并完成 2FA；未附加 `--dry-run`。registry `time["0.0.1"]` 为 2026-10-12T02:31:38.593Z，`next` 指向 `0.0.1`。
+- [x] 手动运行 `verify`，沿用包名/版本；`expected_integrity` 复制原 stage 的完整 `sha512-…`。
+- [x] 查看 `verification.json`：实际安装成功，package.json/probe.txt、integrity 和 `next` 均一致。
 
 ## 收尾与记录
 
-- [ ] 保存 workflow run 地址、服务器/runner、镜像、Node/npm 版本和包级权限设置；artifact 7 天内另存。
-- [ ] 保存包名、版本、stage UUID、原始 integrity、批准前后状态与批准人；不记录 token。
-- [ ] 撤销测试 token，处理不再使用的待批准记录；不自动删除公开版本。
-- [ ] 结论只覆盖本次服务器、工具和权限组合；七包、断线恢复、GitHub Release 留待下一轮。
+- [x] 保存 workflow run 地址、服务器/runner、镜像、Node/npm 版本；三份验证文档均在 `docs/`。
+- [x] 保存包名、版本、stage UUID、原始 integrity、批准前后状态与批准人；未记录 token。
+- [ ] 撤销测试 token（7 天短期，2026-10-10 创建，约 2026-10-17 到期）；不自动删除公开版本。
+- [x] 结论只覆盖本次服务器、工具和权限组合；七包、断线恢复、GitHub Release 留待下一轮。
 
 | 记录项 | 现场填写 |
 | --- | --- |
-| GitHub 仓库 / workflow run | |
-| runner group / labels / 镜像 | |
-| Node / npm | |
-| 测试包 / 版本 / Publishing access | |
-| stage UUID / integrity | |
-| 批准人 / 批准时间 | |
-| verify 结果 / 剩余问题 | |
+| GitHub 仓库 / workflow run | runnel-ai/npm-self-hosted-stage-poc；pack 38019810925、stage 38034087708、verify 38196193616 |
+| runner group / labels / 镜像 | build-and-release；self-hosted/Linux/X64/build；node:24.21.0-bookworm-slim |
+| Node / npm | v24.21.0 / 11.19.0（容器内） |
+| 测试包 / 版本 / Publishing access | @airport233/ocr-stage-poc-test@0.0.1；public |
+| stage UUID / integrity | 048c5e58-0d8d-4b61-a842-6c9ac1dd01e3；sha512-pw7SiEnFJOWedHMdldOhnOswQuu18P1Eb5SfGBN+EqltJwjufoSvs4wfyNQqwFlLHXxXLMXya1EU0FNOS9SEsw== |
+| 批准人 / 批准时间 | airport233 本人 security key 2FA；2026-10-12T02:31:38Z |
+| verify 结果 / 剩余问题 | 匿名安装、内容、integrity、next 全部一致；剩余：撤销 token、可选 deprecate 测试包 |

@@ -2,7 +2,7 @@
 
 用自有 Linux 服务器的 GitHub Actions runner，在 Node 容器中上传一个无依赖的测试包；维护者在可信终端通过 2FA 批准，再验证公开安装。目标是确认这组服务器、npm 账号和权限配置下的发布链路可用。
 
-组织仓库为私有的 [runnel-ai/npm-self-hosted-stage-poc](https://github.com/runnel-ai/npm-self-hosted-stage-poc)。2026-10-10 已在 `linux-runner-01` 的 Node 容器中完成首次 [pack](docs/validation-2026-10-10.md) 和真实 [stage 上传](docs/stage-validation-2026-10-10.md)：测试包为 `@airport233/ocr-stage-poc-test@0.0.1`，5 项测试通过，306 字节的 tarball 仅含两个文件、零依赖，批准前的精确版本未公开。用户已确认 npm 账号 `airport233` 启用了发布 2FA。**从 npm 独立下载比对、人工批准和公开安装验证尚未完成，不能据此宣称发布链路全部通过。** 后续顺序见[现场检查表](docs/tomorrow-checklist.md)。
+组织仓库为私有的 [runnel-ai/npm-self-hosted-stage-poc](https://github.com/runnel-ai/npm-self-hosted-stage-poc)。**2026-10-12 全链路验证通过**：自有服务器 `linux-runner-01` 的 Node 容器用 stage-only、无 bypass 的 token 上传 `@airport233/ocr-stage-poc-test@0.0.1`（306 字节、两文件、零依赖），账号持有人 security key 2FA 批准后公开，干净容器匿名安装且内容、integrity、`next` 标签全部一致。证据见 [pack](docs/validation-2026-10-10.md)、[stage](docs/stage-validation-2026-10-10.md)、[批准与验收](docs/verify-validation-2026-10-12.md)。结论限于本次服务器、账号与权限组合；短期 token 待撤销。
 
 ## 实现范围
 

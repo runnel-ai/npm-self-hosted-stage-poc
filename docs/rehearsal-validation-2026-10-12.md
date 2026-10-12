@@ -28,6 +28,10 @@
 
 七个包 = 七次 `npm stage approve` + 七次 security key 验证，另有多次 npm 登录。CLI 的 2FA 验证链接有效期约两分钟，链接生成后必须立即完成；本次因用餐等原因过期四次，过期后重发即可，已 staged 的记录不受影响。批准期间 `npm stage list` 实时反映剩余数量，可作为断点续批的依据。
 
+### 网页版批准补充实验（同日下午）
+
+为回答"批准能否减负"，同日又 stage 一轮全量 `0.1.1`（run [38214349927](https://github.com/runnel-ai/npm-self-hosted-stage-poc/actions/runs/38214349927)，探针答案 A 复现），用户改从 npmjs.com 网页完成全部七次批准，队列清空、七包 `next` 指向 `0.1.1`。**结论：网页版同样每个包一次 security key 挑战，没有批量批准或会话内免重复验证。** 至此 CLI 与网页两条官方批准通道的"一包一次 2FA"均已实测确认；剩余唯一可能减负的路径是 TOTP + `--otp`（同一 30 秒窗口连批，防重放行为未实测，且安全性弱于 security key），本轮未做。
+
 ## 踩坑记录（对生产改造有参考价值）
 
 1. **job 级 env 冲突**：rehearsal 工作流在 job env 设置 `POC_VERSION=0.1.0`，导致同仓库 probe 测试（要求 `0.0.x`）在共享的 `node --test` 步骤失败。修复：版本 env 收窄到具体步骤。

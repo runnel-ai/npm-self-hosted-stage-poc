@@ -1,0 +1,19 @@
+{
+  "name": "@airport233/ocr-darwin-x64",
+  "version": "0.0.0",
+  "description": "Platform binary for ocr rehearsal (darwin x64) — fake generated content",
+  "os": [
+    "darwin"
+  ],
+  "cpu": [
+    "x64"
+  ],
+  "files": [
+    "bin/"
+  ],
+  "preferUnplugged": true,
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  }
+}

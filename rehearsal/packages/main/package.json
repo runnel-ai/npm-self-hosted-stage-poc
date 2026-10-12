@@ -1,0 +1,37 @@
+{
+  "name": "@airport233/ocr-rehearsal",
+  "version": "0.0.0",
+  "description": "Seven-package staged-publishing rehearsal with fake platform binaries",
+  "bin": {
+    "ocr-rehearsal": "bin/ocr.js"
+  },
+  "files": [
+    "bin/ocr.js",
+    "scripts/install.js",
+    "scripts/update.js",
+    "scripts/version.js",
+    "scripts/platform.js"
+  ],
+  "scripts": {
+    "postinstall": "node scripts/install.js"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "ocrConfig": {
+    "urlPattern": "https://github.com/runnel-ai/npm-self-hosted-stage-poc/releases/download/v{version}/opencodereview-{os}-{arch}",
+    "checksumPattern": "https://github.com/runnel-ai/npm-self-hosted-stage-poc/releases/download/v{version}/sha256sum.txt"
+  },
+  "optionalDependencies": {
+    "@airport233/ocr-darwin-arm64": "0.0.0",
+    "@airport233/ocr-darwin-x64": "0.0.0",
+    "@airport233/ocr-linux-arm64": "0.0.0",
+    "@airport233/ocr-linux-x64": "0.0.0",
+    "@airport233/ocr-win32-arm64": "0.0.0",
+    "@airport233/ocr-win32-x64": "0.0.0"
+  },
+  "engines": {
+    "node": ">=14"
+  },
+  "license": "Apache-2.0"
+}

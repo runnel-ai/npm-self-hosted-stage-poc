@@ -1,0 +1,19 @@
+{
+  "name": "@airport233/ocr-linux-arm64",
+  "version": "0.0.0",
+  "description": "Platform binary for ocr rehearsal (linux arm64) — fake generated content",
+  "os": [
+    "linux"
+  ],
+  "cpu": [
+    "arm64"
+  ],
+  "files": [
+    "bin/"
+  ],
+  "preferUnplugged": true,
+  "license": "Apache-2.0",
+  "publishConfig": {
+    "access": "public"
+  }
+}

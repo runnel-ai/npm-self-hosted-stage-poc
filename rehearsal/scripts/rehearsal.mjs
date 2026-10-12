@@ -1,6 +1,6 @@
 import { createHash } from 'node:crypto';
 import { spawnSync } from 'node:child_process';
-import { appendFileSync, chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { appendFileSync, chmodSync, copyFileSync, cpSync, existsSync, mkdirSync, mkdtempSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
@@ -320,13 +320,20 @@ async function verify(settings, output = OUTPUT) {
     const consumer = join(temporary, 'consumer');
     mkdirSync(consumer);
     writeJson(join(consumer, 'package.json'), { name: 'ocr-rehearsal-consumer', version: '0.0.0', private: true });
-    const install = npm(['install', `${settings.mainName}@${settings.version}`, '--registry', REGISTRY, '--no-audit', '--no-fund'], consumer);
-    assert(/Binary provided by platform package, skipping download/i.test(install), 'postinstall did not resolve the binary from the platform package. Output was logged above.');
+    // --foreground-scripts: npm hides successful lifecycle output by default,
+    // and the postinstall skip message is the evidence under test.
+    const install = npm(['install', `${settings.mainName}@${settings.version}`, '--registry', REGISTRY, '--no-audit', '--no-fund', '--foreground-scripts'], consumer);
+    console.log(install);
+    assert(/Binary provided by platform package, skipping download/i.test(install), `postinstall did not resolve the binary from the platform package. Install output:\n${install.slice(0, 1500)}`);
     const platformKey = `${process.platform}-${process.arch}`;
     const expectedPkg = `${settings.scope}/ocr-${platformKey}`;
-    const lock = JSON.parse(readFileSync(join(consumer, 'package-lock.json'), 'utf8'));
-    const installedNames = Object.keys(lock.packages).filter((key) => key !== '').map((key) => key.replace(/^node_modules\//, '')).sort();
+    // The lockfile records the full optional set; os/cpu filtering only shows on disk.
+    const installedNames = readdirSync(join(consumer, 'node_modules', settings.scope))
+      .filter((entry) => !entry.startsWith('.'))
+      .map((entry) => `${settings.scope}/${entry}`)
+      .sort();
     assert(JSON.stringify(installedNames) === JSON.stringify([settings.mainName, expectedPkg].sort()), `Unexpected installed set: ${installedNames.join(', ')}. os/cpu filtering must skip the other platform packages.`);
+    const lock = JSON.parse(readFileSync(join(consumer, 'package-lock.json'), 'utf8'));
     assert(lock.packages[`node_modules/${settings.mainName}`]?.integrity === expected[settings.mainName], 'Installed main integrity differs from the prepared tarball.');
     assert(lock.packages[`node_modules/${expectedPkg}`]?.integrity === expected[expectedPkg], 'Installed platform integrity differs from the prepared tarball.');
     const binRun = spawnSync(join(consumer, 'node_modules', '.bin', 'ocr-rehearsal'), [], {

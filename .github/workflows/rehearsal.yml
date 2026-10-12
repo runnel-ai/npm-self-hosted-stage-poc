@@ -44,7 +44,6 @@ jobs:
         shell: sh
     env:
       POC_REHEARSAL_SCOPE: ${{ vars.POC_REHEARSAL_SCOPE || '@airport233' }}
-      POC_VERSION: ${{ inputs.version }}
       POC_NODE_IMAGE: ${{ vars.POC_NODE_IMAGE || 'node:24.21.0-bookworm-slim' }}
     steps:
       - name: Check out the rehearsal repository
@@ -57,17 +56,21 @@ jobs:
 
       - name: Pack the seven rehearsal packages without credentials
         if: ${{ inputs.mode != 'verify' }}
+        env:
+          POC_VERSION: ${{ inputs.version }}
         run: node rehearsal/scripts/rehearsal.mjs pack
 
       - name: Stage packages for human review (main-first probe)
         if: ${{ inputs.mode == 'stage' }}
         env:
+          POC_VERSION: ${{ inputs.version }}
           NPM_STAGE_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
         run: node rehearsal/scripts/rehearsal.mjs stage
 
       - name: Verify the approved packages from a clean consumer directory
         if: ${{ inputs.mode == 'verify' }}
         env:
+          POC_VERSION: ${{ inputs.version }}
           POC_EXPECTED_MAIN_INTEGRITY: ${{ inputs.expected_main_integrity }}
         run: node rehearsal/scripts/rehearsal.mjs verify
 

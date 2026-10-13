@@ -61,6 +61,8 @@ async function withNpm(fn, token) {
       NPM_CONFIG_UPDATE_NOTIFIER: 'false',
       NPM_CONFIG_AUDIT: 'false',
       NPM_CONFIG_FUND: 'false',
+      // Fast-fail only suits the tiny probe tarball (~300 B). Do not copy these
+      // values to production-sized packages (tens of MB): raise the timeout or use npm defaults.
       NPM_CONFIG_FETCH_RETRIES: '0',
       NPM_CONFIG_FETCH_TIMEOUT: '30000',
     });

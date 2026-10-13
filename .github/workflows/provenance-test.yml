@@ -3,9 +3,15 @@ name: Provenance stage test
 on:
   workflow_dispatch:
 
+permissions:
+  contents: read
+  id-token: write
+
 jobs:
   t:
     runs-on:
       group: build-and-release
+    container:
+      image: node:24.21.0-bookworm-slim
     steps:
       - run: echo hi

@@ -39,4 +39,4 @@ jobs:
           NODE_AUTH_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
         run: |
           echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
-          npm stage publish out/package.tgz --access public --tag next --ignore-scripts --provenance
+          npm stage publish ./out/package.tgz --access public --tag next --ignore-scripts --provenance

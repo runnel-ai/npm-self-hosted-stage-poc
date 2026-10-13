@@ -28,6 +28,9 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Install git for provenance metadata
+        run: apt-get update && apt-get install -y git
+
       - name: Pack the two-file tarball without credentials
         run: node scripts/probe.mjs pack
 

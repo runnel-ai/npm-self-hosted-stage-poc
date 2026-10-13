@@ -2,6 +2,12 @@ name: Provenance stage test
 
 on:
   workflow_dispatch:
+    inputs:
+      version:
+        description: 'test version for the probe package (0.0.x)'
+        type: string
+        default: '0.0.3'
+        required: true
 
 permissions:
   contents: read
@@ -13,5 +19,8 @@ jobs:
       group: build-and-release
     container:
       image: node:24.21.0-bookworm-slim
+    env:
+      POC_PACKAGE_NAME: @airport233/ocr-stage-poc-test
+      POC_VERSION: ${{ inputs.version }}
     steps:
       - run: echo hi

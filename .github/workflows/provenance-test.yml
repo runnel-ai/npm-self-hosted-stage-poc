@@ -14,13 +14,26 @@ permissions:
   id-token: write
 
 jobs:
-  t:
-    runs-on:
-      group: build-and-release
+  stage-with-provenance:
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
     container:
       image: node:24.21.0-bookworm-slim
     env:
-      POC_PACKAGE_NAME: @airport233/ocr-stage-poc-test
+      POC_PACKAGE_NAME: '@airport233/ocr-stage-poc-test'
       POC_VERSION: ${{ inputs.version }}
     steps:
-      - run: echo hi
+      - name: Check out the probe repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Pack the two-file tarball without credentials
+        run: node scripts/probe.mjs pack
+
+      - name: Stage the tarball with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          npm stage publish out/package.tgz --access public --tag next --ignore-scripts --provenance

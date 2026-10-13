@@ -13,10 +13,14 @@ on:
         default: pack
         required: true
       version:
-        description: 'Rehearsal version shared by all seven packages (e.g. 0.1.0)'
+        description: 'Rehearsal version for the MAIN package (e.g. 0.1.0)'
         type: string
         default: '0.1.0'
         required: true
+      platform_version:
+        description: 'optional: platform package version pinned by the main package; defaults to version (set it to reuse already-public platform packages)'
+        type: string
+        required: false
       expected_main_integrity:
         description: 'verify only, optional: sha512-... of the main package copied from the original stage manifest'
         type: string
@@ -58,12 +62,14 @@ jobs:
         if: ${{ inputs.mode != 'verify' }}
         env:
           POC_VERSION: ${{ inputs.version }}
+          POC_PLATFORM_VERSION: ${{ inputs.platform_version }}
         run: node rehearsal/scripts/rehearsal.mjs pack
 
       - name: Stage packages for human review (main-first probe)
         if: ${{ inputs.mode == 'stage' }}
         env:
           POC_VERSION: ${{ inputs.version }}
+          POC_PLATFORM_VERSION: ${{ inputs.platform_version }}
           NPM_STAGE_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
         run: node rehearsal/scripts/rehearsal.mjs stage
 
@@ -71,6 +77,7 @@ jobs:
         if: ${{ inputs.mode == 'verify' }}
         env:
           POC_VERSION: ${{ inputs.version }}
+          POC_PLATFORM_VERSION: ${{ inputs.platform_version }}
           POC_EXPECTED_MAIN_INTEGRITY: ${{ inputs.expected_main_integrity }}
         run: node rehearsal/scripts/rehearsal.mjs verify
 

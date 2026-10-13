@@ -1,6 +1,7 @@
 import assert from 'node:assert/strict';
 import { createRequire } from 'node:module';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { spawnSync } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { dirname, join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -83,8 +84,33 @@ test('readSettings guards the production scope and validates the version', () =>
   assert.equal(settings.scope, '@airport233');
   assert.equal(settings.mainName, '@airport233/ocr-rehearsal');
   assert.equal(settings.platformNames.length, 6);
+  assert.equal(settings.platformVersion, settings.version, 'platform version must default to the main version');
   assert.throws(() => readSettings({ POC_REHEARSAL_SCOPE: '@alibaba-group' }), /production scope/);
   assert.throws(() => readSettings({ POC_VERSION: '1.0' }), /semver/);
+  const mixed = readSettings({ POC_VERSION: '0.2.0', POC_PLATFORM_VERSION: '0.1.1' });
+  assert.equal(mixed.version, '0.2.0');
+  assert.equal(mixed.platformVersion, '0.1.1');
+});
+
+test('pack supports a main version pinning different platform versions', async () => {
+  const out = mkdtempSync(join(tmpdir(), 'rehearsal-mixed-'));
+  try {
+    const settings = readSettings({ POC_VERSION: '0.2.0', POC_PLATFORM_VERSION: '0.1.1' });
+    const manifest = await pack(settings, out);
+    const byName = Object.fromEntries(manifest.packages.map((entry) => [entry.name, entry]));
+    for (const name of settings.platformNames) {
+      assert.equal(byName[name].version, '0.1.1', `${name} must stay on the platform version`);
+    }
+    const main = byName[settings.mainName];
+    assert.equal(main.version, '0.2.0');
+    const unpacked = join(out, 'unpacked-main');
+    mkdirSync(unpacked);
+    spawnSync('tar', ['-xzf', join(out, main.tarball), '-C', unpacked], { check: true });
+    const pkg = JSON.parse(readFileSync(join(unpacked, 'package', 'package.json'), 'utf8'));
+    assert.deepEqual(Object.values(pkg.optionalDependencies), Array(6).fill('0.1.1'), 'optionalDependencies must pin the platform version');
+  } finally {
+    rmSync(out, { recursive: true, force: true });
+  }
 });
 
 test('parseStageList finds the staged id for the exact version only', () => {

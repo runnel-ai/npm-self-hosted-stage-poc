@@ -22,9 +22,12 @@ export function readSettings(env = process.env) {
   assert(scope !== '@alibaba-group', 'Refusing the production scope. The rehearsal only runs on a test scope.');
   const version = env.POC_VERSION || '0.1.0';
   assert(/^\d+\.\d+\.\d+$/.test(version), 'POC_VERSION must be a plain semver such as 0.1.0.');
+  const platformVersion = env.POC_PLATFORM_VERSION || version;
+  assert(/^\d+\.\d+\.\d+$/.test(platformVersion), 'POC_PLATFORM_VERSION must be a plain semver. It defaults to POC_VERSION; set it to reuse already-public platform packages.');
   return {
     scope,
     version,
+    platformVersion,
     mainName: `${scope}/ocr-rehearsal`,
     platformNames: PLATFORMS.map((p) => `${scope}/ocr-${p}`),
   };
@@ -124,10 +127,10 @@ export async function pack(settings, output = OUTPUT) {
     for (const [index, platformKey] of PLATFORMS.entries()) {
       const name = settings.platformNames[index];
       const src = JSON.parse(readFileSync(join(PACKAGES, 'platforms', platformKey, 'package.json'), 'utf8'));
-      const binary = fakeBinary(platformKey, settings.version);
-      const entry = await packOne(npm, join(temporary, `platform-${platformKey}`), name, settings.version, (dir) => {
+      const binary = fakeBinary(platformKey, settings.platformVersion);
+      const entry = await packOne(npm, join(temporary, `platform-${platformKey}`), name, settings.platformVersion, (dir) => {
         mkdirSync(join(dir, 'bin'), { recursive: true });
-        writeJson(join(dir, 'package.json'), { ...src, version: settings.version });
+        writeJson(join(dir, 'package.json'), { ...src, version: settings.platformVersion });
         const target = join(dir, 'bin', binary.name);
         writeFileSync(target, binary.text);
         if (binary.executable) chmodSync(target, 0o755);
@@ -139,7 +142,7 @@ export async function pack(settings, output = OUTPUT) {
       cpSync(join(PACKAGES, 'main'), dir, { recursive: true });
       const pkg = JSON.parse(readFileSync(join(dir, 'package.json'), 'utf8'));
       pkg.version = settings.version;
-      pkg.optionalDependencies = Object.fromEntries(Object.keys(pkg.optionalDependencies).map((key) => [key, settings.version]));
+      pkg.optionalDependencies = Object.fromEntries(Object.keys(pkg.optionalDependencies).map((key) => [key, settings.platformVersion]));
       writeJson(join(dir, 'package.json'), pkg);
     }, join(output, 'tarballs'));
     assert(mainEntry.files.includes('bin/ocr.js') && mainEntry.files.includes('scripts/install.js') && mainEntry.files.includes('scripts/platform.js'), 'The main package must ship the launcher and install scripts.');
@@ -218,7 +221,7 @@ async function stage(settings, output = OUTPUT) {
   assert(token, 'NPM_STAGE_TOKEN is required only for stage.');
   const manifestPath = join(output, 'rehearsal-manifest.json');
   const manifest = JSON.parse(readFileSync(manifestPath, 'utf8'));
-  assert(manifest.scope === settings.scope && manifest.version === settings.version, 'The manifest does not match the requested rehearsal.');
+  assert(manifest.scope === settings.scope && manifest.version === settings.version && manifest.platformVersion === settings.platformVersion, 'The manifest does not match the requested rehearsal.');
   assert(['packed', 'platforms-staged'].includes(manifest.phase), `Manifest phase ${manifest.phase} does not allow a stage run. Inspect existing stages before doing anything else.`);
   for (const entry of manifest.packages) {
     assert(integrityOf(readFileSync(join(output, entry.tarball))) === entry.integrity, `The prepared tarball for ${entry.name} has changed. Do not upload.`);
@@ -234,6 +237,7 @@ async function stage(settings, output = OUTPUT) {
     const record = { platforms: {}, main: null, probe: null, probeRetry: null };
     const tarballOf = (name) => join(output, manifest.packages.find((entry) => entry.name === name).tarball);
     const integrityOfName = (name) => manifest.packages.find((entry) => entry.name === name).integrity;
+    const versionOf = (name) => manifest.packages.find((entry) => entry.name === name).version;
     const publish = (name) => {
       const result = run(['stage', 'publish', tarballOf(name), '--registry', REGISTRY, '--access', 'public', '--tag', DIST_TAG, '--ignore-scripts', '--json']);
       if (result.error || result.status !== 0) {
@@ -241,7 +245,7 @@ async function stage(settings, output = OUTPUT) {
         const detail = result.stderr?.split('\n').find((line) => /error(?! code)/i.test(line))?.replace(/npm (?:error|ERR!)\s*/i, '').slice(0, 300);
         return { ok: false, code: code || `exit ${result.status}`, detail: detail || null };
       }
-      return { ok: true, ...readStagePublish(JSON.parse(result.stdout), name, settings.version, integrityOfName(name)) };
+      return { ok: true, ...readStagePublish(JSON.parse(result.stdout), name, versionOf(name), integrityOfName(name)) };
     };
     if (manifest.phase === 'packed') {
       summarize([`Probe: staging the MAIN package ${settings.mainName} first, while no platform package is public. A rejection is a valid experimental answer.`]);
@@ -259,7 +263,7 @@ async function stage(settings, output = OUTPUT) {
         record.platforms[name] = { status: 'already-public' };
         continue;
       }
-      const existing = parseStageList(npm(['stage', 'list', name]), name, settings.version);
+      const existing = parseStageList(npm(['stage', 'list', name]), name, versionOf(name));
       if (existing) {
         record.platforms[name] = { status: 'already-staged', stageId: existing };
         continue;
@@ -340,10 +344,11 @@ async function verify(settings, output = OUTPUT) {
       env: { ...process.env, OCR_NO_UPDATE: '1' }, encoding: 'utf8', timeout: 30_000,
     });
     assert(binRun.status === 0, `The installed launcher exited with ${binRun.status}: ${binRun.stderr?.slice(0, 300)}`);
-    assert(binRun.stdout.includes(`platform=${platformKey}`) && binRun.stdout.includes(`version=${settings.version}`), `Unexpected launcher output: ${binRun.stdout.trim()}`);
+    assert(binRun.stdout.includes(`platform=${platformKey}`) && binRun.stdout.includes(`version=${settings.platformVersion}`), `Unexpected launcher output: ${binRun.stdout.trim()}`);
     const result = {
       scope: settings.scope,
       version: settings.version,
+      platformVersion: settings.platformVersion,
       registry: REGISTRY,
       integrities: expected,
       distTags,

@@ -20,8 +20,8 @@ export function readSettings(env = process.env) {
   const scope = env.POC_REHEARSAL_SCOPE || '@airport233';
   assert(/^@[a-z0-9][a-z0-9-]*$/.test(scope), 'POC_REHEARSAL_SCOPE must be a lowercase npm scope such as @airport233.');
   assert(scope !== '@alibaba-group', 'Refusing the production scope. The rehearsal only runs on a test scope.');
-  const version = env.POC_VERSION || '0.1.0';
-  assert(/^\d+\.\d+\.\d+$/.test(version), 'POC_VERSION must be a plain semver such as 0.1.0.');
+  const version = (env.POC_VERSION || '0.1.0').replace(/^v/, '');
+  assert(/^\d+\.\d+\.\d+$/.test(version), 'POC_VERSION must be a plain semver such as 0.1.0 (a leading v from a git tag is stripped).');
   const platformVersion = env.POC_PLATFORM_VERSION || version;
   assert(/^\d+\.\d+\.\d+$/.test(platformVersion), 'POC_PLATFORM_VERSION must be a plain semver. It defaults to POC_VERSION; set it to reuse already-public platform packages.');
   return {

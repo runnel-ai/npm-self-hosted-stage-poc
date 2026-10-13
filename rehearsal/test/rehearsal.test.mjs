@@ -90,6 +90,7 @@ test('readSettings guards the production scope and validates the version', () =>
   const mixed = readSettings({ POC_VERSION: '0.2.0', POC_PLATFORM_VERSION: '0.1.1' });
   assert.equal(mixed.version, '0.2.0');
   assert.equal(mixed.platformVersion, '0.1.1');
+  assert.equal(readSettings({ POC_VERSION: 'v0.4.0' }).version, '0.4.0', 'a leading v from a git tag must be stripped');
 });
 
 test('pack supports a main version pinning different platform versions', async () => {

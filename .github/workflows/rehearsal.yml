@@ -1,6 +1,8 @@
 name: Seven-package staged-publishing rehearsal
 
 on:
+  push:
+    tags: ['v*']
   workflow_dispatch:
     inputs:
       mode:
@@ -13,7 +15,7 @@ on:
         default: pack
         required: true
       version:
-        description: 'Rehearsal version for the MAIN package (e.g. 0.1.0)'
+        description: 'Rehearsal version for the MAIN package (e.g. 0.1.0); on tag pushes the tag name is used instead'
         type: string
         default: '0.1.0'
         required: true
@@ -55,28 +57,35 @@ jobs:
         with:
           persist-credentials: false
 
+      - name: Resolve mode and version from the trigger
+        id: cfg
+        run: |
+          # Tag pushes stage automatically; manual runs use the dispatch inputs.
+          echo "mode=${{ inputs.mode || 'stage' }}" >> "$GITHUB_OUTPUT"
+          echo "version=${{ inputs.version || github.ref_name }}" >> "$GITHUB_OUTPUT"
+
       - name: Check local contracts without installing dependencies
         run: node --test
 
       - name: Pack the seven rehearsal packages without credentials
-        if: ${{ inputs.mode != 'verify' }}
+        if: ${{ steps.cfg.outputs.mode != 'verify' }}
         env:
-          POC_VERSION: ${{ inputs.version }}
+          POC_VERSION: ${{ steps.cfg.outputs.version }}
           POC_PLATFORM_VERSION: ${{ inputs.platform_version }}
         run: node rehearsal/scripts/rehearsal.mjs pack
 
       - name: Stage packages for human review (main-first probe)
-        if: ${{ inputs.mode == 'stage' }}
+        if: ${{ steps.cfg.outputs.mode == 'stage' }}
         env:
-          POC_VERSION: ${{ inputs.version }}
+          POC_VERSION: ${{ steps.cfg.outputs.version }}
           POC_PLATFORM_VERSION: ${{ inputs.platform_version }}
           NPM_STAGE_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
         run: node rehearsal/scripts/rehearsal.mjs stage
 
       - name: Verify the approved packages from a clean consumer directory
-        if: ${{ inputs.mode == 'verify' }}
+        if: ${{ steps.cfg.outputs.mode == 'verify' }}
         env:
-          POC_VERSION: ${{ inputs.version }}
+          POC_VERSION: ${{ steps.cfg.outputs.version }}
           POC_PLATFORM_VERSION: ${{ inputs.platform_version }}
           POC_EXPECTED_MAIN_INTEGRITY: ${{ inputs.expected_main_integrity }}
         run: node rehearsal/scripts/rehearsal.mjs verify

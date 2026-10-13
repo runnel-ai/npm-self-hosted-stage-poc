@@ -16,7 +16,8 @@ permissions:
 jobs:
   stage-with-provenance:
     # provenance signing requires an npm-verifiable hosted environment; self-hosted fails with E422
-    runs-on: ubuntu-latest
+    runs-on:
+      group: build-and-release
     timeout-minutes: 10
     container:
       image: node:24.21.0-bookworm-slim

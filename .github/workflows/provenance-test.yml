@@ -1,0 +1,40 @@
+name: Provenance stage test
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'test version for the probe package (0.0.x)'
+        type: string
+        default: '0.0.3'
+        required: true
+
+permissions:
+  contents: read
+  id-token: write
+
+jobs:
+  stage-with-provenance:
+    # provenance signing requires an npm-verifiable hosted environment; self-hosted fails with E422
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    container:
+      image: node:24.21.0-bookworm-slim
+    env:
+      POC_PACKAGE_NAME: @airport233/ocr-stage-poc-test
+      POC_VERSION: ${{ inputs.version }}
+    steps:
+      - name: Check out the probe repository
+        uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4.4.0
+        with:
+          persist-credentials: false
+
+      - name: Pack the two-file tarball without credentials
+        run: node scripts/probe.mjs pack
+
+      - name: Stage the tarball with provenance
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_STAGE_TOKEN }}
+        run: |
+          echo "//registry.npmjs.org/:_authToken=${NODE_AUTH_TOKEN}" > ~/.npmrc
+          npm stage publish out/package.tgz --access public --tag next --ignore-scripts --provenance
